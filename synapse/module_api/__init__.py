@@ -841,13 +841,13 @@ class ModuleApi:
     ) -> None:
         cached_func.invalidate(keys)
         await self._store.send_invalidation_to_replication(
-            cached_func.__qualname__,
+            f"{cached_func.__module__}.{cached_func.__name__}",
             keys,
         )
 
     def register_cached_function(self, cached_func: CachedFunction) -> None:
         self._store.register_external_cached_function(
-            cached_func.__qualname__, cached_func
+            f"{cached_func.__module__}.{cached_func.__name__}", cached_func
         )
 
     def complete_sso_login(
