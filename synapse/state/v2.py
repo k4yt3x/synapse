@@ -577,15 +577,16 @@ async def _iterative_auth_checks(
                 if ev.rejected_reason is None:
                     auth_events[key] = event_map[ev_id]
 
-        try:
-            event_auth.check_state_dependent_auth_rules(
-                event,
-                auth_events.values(),
-            )
+        if event.rejected_reason is None:
+            try:
+                event_auth.check_state_dependent_auth_rules(
+                    event,
+                    auth_events.values(),
+                )
 
-            resolved_state[(event.type, event.state_key)] = event_id
-        except AuthError:
-            pass
+                resolved_state[(event.type, event.state_key)] = event_id
+            except AuthError:
+                pass
 
         # We await occasionally when we're working with large data sets to
         # ensure that we don't block the reactor loop for too long.
