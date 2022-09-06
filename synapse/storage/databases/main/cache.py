@@ -91,11 +91,6 @@ class CacheInvalidationWorkerStore(SQLBaseStore):
         else:
             self._cache_id_gen = None
 
-        self.external_cached_functions = {}
-
-    def register_external_cached_function(self, cache_name, func):
-        self.external_cached_functions[cache_name] = func
-
     async def get_all_updated_caches(
         self, instance_name: str, last_id: int, current_id: int, limit: int
     ) -> Tuple[List[Tuple[int, tuple]], int, bool]:
@@ -183,11 +178,7 @@ class CacheInvalidationWorkerStore(SQLBaseStore):
                     members_changed = set(row.keys[1:])
                     self._invalidate_state_caches(room_id, members_changed)
                 else:
-                    res = self._attempt_to_invalidate_cache(row.cache_func, row.keys)
-                    if not res:
-                        external_func = self.external_cached_functions[row.cache_func]
-                        if external_func:
-                            external_func.invalidate(row.keys)
+                    self._attempt_to_invalidate_cache(row.cache_func, row.keys)
 
         super().process_replication_rows(stream_name, instance_name, token, rows)
 
@@ -341,7 +332,9 @@ class CacheInvalidationWorkerStore(SQLBaseStore):
                 txn, CURRENT_STATE_CACHE_NAME, [room_id]
             )
 
-    async def send_invalidation_to_replication(self, cache_name, keys):
+    async def send_invalidation_to_replication(
+        self, cache_name: str, keys: Optional[Collection[Any]]
+    ) -> None:
         await self.db_pool.runInteraction(
             "send_invalidation_to_replication",
             self._send_invalidation_to_replication,

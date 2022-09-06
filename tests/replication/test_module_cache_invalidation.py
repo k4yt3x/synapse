@@ -39,35 +39,6 @@ class ModuleCacheInvalidationTestCase(BaseMultiWorkerStreamTestCase):
         synapse.rest.admin.register_servlets,
     ]
 
-    def test_module_cache_local_invalidation_only(self):
-        main_cache = TestCache()
-
-        self.make_worker_hs("synapse.app.generic_worker")
-
-        worker_cache = TestCache()
-
-        self.assertEqual(FIRST_VALUE, self.get_success(main_cache.cached_function(KEY)))
-        self.assertEqual(
-            FIRST_VALUE, self.get_success(worker_cache.cached_function(KEY))
-        )
-
-        main_cache.current_value = SECOND_VALUE
-        worker_cache.current_value = SECOND_VALUE
-        # No local invalidation yet, should return the cached value on both the main process and the worker
-        self.assertEqual(FIRST_VALUE, self.get_success(main_cache.cached_function(KEY)))
-        self.assertEqual(
-            FIRST_VALUE, self.get_success(worker_cache.cached_function(KEY))
-        )
-
-        # local invalidation on the main process, worker should still return the cached value
-        main_cache.cached_function.invalidate((KEY,))
-        self.assertEqual(
-            SECOND_VALUE, self.get_success(main_cache.cached_function(KEY))
-        )
-        self.assertEqual(
-            FIRST_VALUE, self.get_success(worker_cache.cached_function(KEY))
-        )
-
     def test_module_cache_full_invalidation(self):
         # This is supposed to be useless, but something definitively
         # get initialized regarding replication there since it doesn't work without it
