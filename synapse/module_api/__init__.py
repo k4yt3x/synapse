@@ -854,7 +854,7 @@ class ModuleApi:
         self, cached_func: CachedFunction, keys: Tuple[Any, ...]
     ) -> None:
         """Invalidate a cache entry of a cached function across workers. The cached function
-        needs to be registered first with `register_cached_function` for this to work.
+        needs to be registered on all workers first with `register_cached_function`.
 
         Args:
             cached_function: The cached function that needs an invalidation
